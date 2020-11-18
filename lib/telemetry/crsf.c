@@ -382,6 +382,11 @@ bool checkCrsfTelemetryState(void)
 
 /*
  * Called periodically by the scheduler
+ *
+ * this function try to send data to rx everytime she's called by scheduler 
+ * thanks to crsfRxSendTelemetryData();
+ * if deviceInfos is asked by receiver, so do a frame to send to the receiver
+ * else do a data frame if it's in time 10Hz refresh
  */
 void handleCrsfTelemetry(timeUs_t currentTimeUs)
 {
