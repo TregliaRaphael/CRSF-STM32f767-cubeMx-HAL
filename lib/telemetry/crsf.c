@@ -53,7 +53,7 @@
 #include "flight/position.h"	//same
 
 //#include "io/displayport_crsf.h"
-#include "io/gps.h"		//same
+#include "sensors/gps.h"	
 #include "io/serial.h"		//same
 
 #include "rx/crsf.h"		//GOOD
@@ -127,7 +127,8 @@ void crsfFrameGps(sbuf_t *dst)
     sbufWriteU16BigEndian(dst, (gpsSol.groundSpeed * 36 + 50) / 100); // gpsSol.groundSpeed is in cm/s
     sbufWriteU16BigEndian(dst, gpsSol.groundCourse * 10); // gpsSol.groundCourse is degrees * 10
     //can replace altitude by random number, guess later
-    const uint16_t altitude = (constrain(getEstimatedAltitudeCm(), 0 * 100, 5000 * 100) / 100) + 1000; // constrain altitude from 0 to 5,000m
+    //const uint16_t altitude = (constrain(getEstimatedAltitudeCm(), 0 * 100, 5000 * 100) / 100) + 1000; // constrain altitude from 0 to 5,000m
+    const uint16_t altitude = gpsSol.hdop;  //to replace to real altitude///////////
     sbufWriteU16BigEndian(dst, altitude);
     sbufWriteU8(dst, gpsSol.numSat);
 }
@@ -148,11 +149,12 @@ void crsfFrameBatterySensor(sbuf_t *dst)
     sbufWriteU8(dst, CRSF_FRAME_BATTERY_SENSOR_PAYLOAD_SIZE + CRSF_FRAME_LENGTH_TYPE_CRC);
     sbufWriteU8(dst, CRSF_FRAMETYPE_BATTERY_SENSOR);
     //get random value for voltage is fine
-    if (telemetryConfig()->report_cell_voltage) {
+    /*if (telemetryConfig()->report_cell_voltage) {
         sbufWriteU16BigEndian(dst, (getBatteryAverageCellVoltage() + 5) / 10); // vbat is in units of 0.01V
     } else {
         sbufWriteU16BigEndian(dst, getLegacyBatteryVoltage());
-    }
+    }*/
+    sbufWriteU16BigEndian(dst, getLegacyBatteryVoltage());
     sbufWriteU16BigEndian(dst, getAmperage() / 10);
     const uint32_t mAhDrawn = getMAhDrawn();
     const uint8_t batteryRemainingPercentage = calculateBatteryPercentageRemaining();
