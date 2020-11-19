@@ -1,12 +1,12 @@
 #pragma once
 
-/*#include "pg/pg.h"
+#include "pg/pg.h"
 
-#include "common/filter.h"
+//#include "common/filter.h"   // dafuck here
 #include "common/time.h"
-#include "sensors/current.h"
-#include "sensors/voltage.h"
-*/
+//#include "sensors/current.h" // currentMeterSource
+//#include "sensors/voltage.h" // voltageMeterSource
+
 
 //TODO: Make the 'cell full' voltage user adjustble
 #define CELL_VOLTAGE_FULL_CV 420
@@ -57,7 +57,7 @@ PG_DECLARE(batteryConfig_t, batteryConfig);
 typedef struct lowVoltageCutoff_s {
     bool enabled;
     uint8_t percentage;
-    timeUs_t startTime;
+    timeUs_t startTime;//time.h
 } lowVoltageCutoff_t;
 
 typedef enum {

@@ -27,43 +27,41 @@
 
 #ifdef USE_TELEMETRY_CRSF
 
-//#include "build/atomic.h"
-//#include "build/build_config.h"
-//#include "build/version.h"
+//#include "build/atomic.h"	//unit tests *spit*
+//#include "build/build_config.h"//maybe need to do mine
+//#include "build/version.h"	// too
 
-//#include "config/feature.h"
-//#include "pg/pg.h"
-//#include "pg/pg_ids.h"
+//#include "config/feature.h"	//useless maybe implem mine? nah
+#include "pg/pg.h"		// only import PG_DECLARE, i removed other fct
+//#include "pg/pg_ids.h"	//useless
 
 #include "common/crc.h"		//GOOD
 #include "common/maths.h"	//GOOD
-//#include "common/printf.h"
+//#include "common/printf.h"	// do my own far later
 #include "common/streambuf.h"   //GOOD
 #include "common/utils.h"	//GOOD
 
-//#include "cms/cms.h"
+//#include "cms/cms.h"		// see yah soon
 
-#include "drivers/nvic.h"	//GOOD but not sure it's usefull
+//#include "drivers/nvic.h"	//GOOD but not sure it's usefull, maybe remove later but keep quoted in case
 
 //#include "config/config.h" 	//can be skipped, need remove some code
 //#include "fc/rc_modes.h"	//same
-//#include "fc/runtime_config.h"//same
+//#include "fc/runtime_config.h"// to get all from fc/config
 
-#include "flight/imu.h"		//replace by my own sensors
-#include "flight/position.h"	//same
+#include "flight/imu.h"		// for atttttitude
+//#include "flight/position.h"	// for alllllltitude
 
-//#include "io/displayport_crsf.h"
-#include "sensors/gps.h"	
-#include "io/serial.h"		//same
+#include "sensors/gps.h"	// gud but need replace by mine later
+//#include "io/serial.h"	// do my own implem prior
 
 #include "rx/crsf.h"		//GOOD
 #include "rx/crsf_protocol.h"	//GOOD
 
-#include "sensors/battery.h"	//replace by my own sensors
-#include "sensors/sensors.h"	//replace by my own sensors
+#include "sensors/battery.h"	// GOOD
+#include "sensors/sensors.h"	// free to include, no dependancy
 
-#include "telemetry/telemetry.h"//can be taken for struct but need clean code
-//#include "telemetry/msp_shared.h"//MSP REMOVED can be kicked
+//#include "telemetry/telemetry.h"     // next thing to implem to handle all my sensors ez
 
 #include "telemetry/crsf.h"	//GOOD
 
@@ -221,7 +219,7 @@ void crsfFrameFlightMode(sbuf_t *dst)
     // Acro is the default mode
     const char *flightMode = "ACRO";
 
-    // Modes that are only relevant when disarmed
+    /*// Modes that are only relevant when disarmed
     if (!ARMING_FLAG(ARMED) && isArmingDisabled()) {
         flightMode = "!ERR";
     } else
@@ -244,13 +242,14 @@ void crsfFrameFlightMode(sbuf_t *dst)
         flightMode = "HOR";
     } else if (airmodeIsEnabled()) {
         flightMode = "AIR";
-    }
+    }*/
 
     //remove other to put the the string we wanted
     sbufWriteString(dst, flightMode);
-    if (!ARMING_FLAG(ARMED)) {
+    /*if (!ARMING_FLAG(ARMED)) {
         sbufWriteU8(dst, '*');
-    }
+    }*/
+    sbufWriteU8(dst, '*'); //to remove maybe
     sbufWriteU8(dst, '\0');     // zero-terminate string
     // write in the frame length
     *lengthPtr = sbufPtr(dst) - lengthPtr;
@@ -271,8 +270,8 @@ uint8_t     0x01 (Parameter version 1)
 */
 void crsfFrameDeviceInfo(sbuf_t *dst) {
 
-    char buff[30];
-    tfp_sprintf(buff, "%s %s: %s", FC_FIRMWARE_NAME, FC_VERSION_STRING, systemConfig()->boardIdentifier);
+    char buff[30] = "RaphFlight lel: having_fun_baa";
+    //tfp_sprintf(buff, "%s %s: %s", FC_FIRMWARE_NAME, FC_VERSION_STRING, systemConfig()->boardIdentifier);
 
     uint8_t *lengthPtr = sbufPtr(dst);
     sbufWriteU8(dst, 0);
@@ -330,13 +329,13 @@ static void processCrsf(void)
         crsfFrameFlightMode(dst);
         crsfFinalize(dst);
     }
-#ifdef USE_GPS
+//#ifdef USE_GPS
     if (currentSchedule & BV(CRSF_FRAME_GPS_INDEX)) {
         crsfInitializeFrame(dst);
         crsfFrameGps(dst);
         crsfFinalize(dst);
     }
-#endif
+//#endif
     crsfScheduleIndex = (crsfScheduleIndex + 1) % crsfScheduleCount;
 }
 
@@ -351,28 +350,29 @@ void initCrsfTelemetry(void)
 {
     // check if there is a serial port open for CRSF telemetry (ie opened by the CRSF RX)
     // and feature is enabled, if so, set CRSF telemetry enabled
-    crsfTelemetryEnabled = crsfRxIsActive();
+    //crsfTelemetryEnabled = crsfRxIsActive(); active if serialPort opened so... true lel
+    crsfTelemetryEnabled = true;
 
-    if (!crsfTelemetryEnabled) {
+    /*if (!crsfTelemetryEnabled) {
         return;
-    }
+    }*/
 
     deviceInfoReplyPending = false;
     int index = 0;
-    if (sensors(SENSOR_ACC) && telemetryIsSensorEnabled(SENSOR_PITCH | SENSOR_ROLL | SENSOR_HEADING)) {
-        crsfSchedule[index++] = BV(CRSF_FRAME_ATTITUDE_INDEX);
-    }
-    if ((isBatteryVoltageConfigured() && telemetryIsSensorEnabled(SENSOR_VOLTAGE))
-        || (isAmperageConfigured() && telemetryIsSensorEnabled(SENSOR_CURRENT | SENSOR_FUEL))) {
-        crsfSchedule[index++] = BV(CRSF_FRAME_BATTERY_SENSOR_INDEX);
-    }
+    //if (sensors(SENSOR_ACC) && telemetryIsSensorEnabled(SENSOR_PITCH | SENSOR_ROLL | SENSOR_HEADING)) {
+    crsfSchedule[index++] = BV(CRSF_FRAME_ATTITUDE_INDEX);
+    //}
+    //if ((isBatteryVoltageConfigured() && telemetryIsSensorEnabled(SENSOR_VOLTAGE))
+    //    || (isAmperageConfigured() && telemetryIsSensorEnabled(SENSOR_CURRENT | SENSOR_FUEL))) {
+    crsfSchedule[index++] = BV(CRSF_FRAME_BATTERY_SENSOR_INDEX);
+    //}
     crsfSchedule[index++] = BV(CRSF_FRAME_FLIGHT_MODE_INDEX);
-#ifdef USE_GPS
-    if (featureIsEnabled(FEATURE_GPS)
-       && telemetryIsSensorEnabled(SENSOR_ALTITUDE | SENSOR_LAT_LONG | SENSOR_GROUND_SPEED | SENSOR_HEADING)) {
+//#ifdef USE_GPS
+   // if (featureIsEnabled(FEATURE_GPS)
+    //   && telemetryIsSensorEnabled(SENSOR_ALTITUDE | SENSOR_LAT_LONG | SENSOR_GROUND_SPEED | SENSOR_HEADING)) {
         crsfSchedule[index++] = BV(CRSF_FRAME_GPS_INDEX);
-    }
-#endif
+    //}
+//#endif
     crsfScheduleCount = (uint8_t)index;
  }
 
