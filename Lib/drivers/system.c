@@ -35,6 +35,7 @@ void cycleCounterInit(void)
 
 static volatile int sysTickPending = 0;
 
+//care other implem in stm32f7xx_it.h in cube, /Core/Src/
 void SysTick_Handler(void)
 {
     ATOMIC_BLOCK(NVIC_PRIO_MAX) {

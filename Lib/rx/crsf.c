@@ -31,10 +31,10 @@
 #include "common/maths.h"	//GOOD
 #include "common/utils.h"	//GOOD
 
-//#include "drivers/time.h"
-
 //#include "io/serial.h"	//to check
 
+#include "pg/rx.h"
+#include "rx/rx.h"
 #include "rx/crsf.h"		//GOOD
 
 #include "telemetry/crsf_telemetry.h"	//GOOD
@@ -284,9 +284,9 @@ STATIC_UNIT_TESTED void crsfDataReceive(uint16_t c, void *data)
 }
 
 //usefull
-STATIC_UNIT_TESTED uint8_t crsfFrameStatus(rxRuntimeState_t *rxRuntimeState)
+STATIC_UNIT_TESTED uint8_t crsfFrameStatus(/*rxRuntimeState_t *rxRuntimeState*/void)
 {
-    UNUSED(rxRuntimeState);
+    //UNUSED(rxRuntimeState);
 
 #if defined(USE_CRSF_LINK_STATISTICS)
     crsfCheckRssi(micros());
@@ -318,9 +318,9 @@ STATIC_UNIT_TESTED uint8_t crsfFrameStatus(rxRuntimeState_t *rxRuntimeState)
 }
 
 //usefull
-STATIC_UNIT_TESTED uint16_t crsfReadRawRC(const rxRuntimeState_t *rxRuntimeState, uint8_t chan)
+STATIC_UNIT_TESTED uint16_t crsfReadRawRC(/*const rxRuntimeState_t *rxRuntimeState, */uint8_t chan)
 {
-    UNUSED(rxRuntimeState);
+    //UNUSED(rxRuntimeState);
     /* conversion from RC value to PWM
      *       RC     PWM
      * min  172 ->  988us
@@ -362,25 +362,25 @@ bool crsfSetUart(UART_HandleTypeDef *huart)
 
 
 //rxRuntimeState in rx.h
-bool crsfRxInit(const rxConfig_t *rxConfig, rxRuntimeState_t *rxRuntimeState)
+bool crsfRxInit(const rxConfig_t *rxConfig/*, rxRuntimeState_t *rxRuntimeState*/)
 {
     for (int ii = 0; ii < CRSF_MAX_CHANNEL; ++ii) {
         crsfChannelData[ii] = (16 * rxConfig->midrc) / 10 - 1408;
     }
 
-    rxRuntimeState->channelCount = CRSF_MAX_CHANNEL;
+    /*rxRuntimeState->channelCount = CRSF_MAX_CHANNEL;
     rxRuntimeState->rxRefreshRate = CRSF_TIME_BETWEEN_FRAMES_US; //!!TODO this needs checking
 
     rxRuntimeState->rcReadRawFn = crsfReadRawRC;
     rxRuntimeState->rcFrameStatusFn = crsfFrameStatus;
     rxRuntimeState->rcFrameTimeUsFn = crsfFrameTimeUs;
 
-    /*const serialPortConfig_t *portConfig = findSerialPortConfig(FUNCTION_RX_SERIAL);
+    const serialPortConfig_t *portConfig = findSerialPortConfig(FUNCTION_RX_SERIAL);
     if (!portConfig) {
         return false;
-    }*/
+    }
 
-    /*serialPort = openSerialPort(portConfig->identifier,
+    serialPort = openSerialPort(portConfig->identifier,
         FUNCTION_RX_SERIAL,
         crsfDataReceive,
         NULL,
