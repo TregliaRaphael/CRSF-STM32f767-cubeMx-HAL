@@ -25,7 +25,7 @@
 
 //#include "platform.h"
 
-//#ifdef USE_TELEMETRY_CRSF
+#ifdef USE_TELEMETRY_CRSF
 
 //#include "build/atomic.h"	//unit tests *spit*
 //#include "build/build_config.h"//maybe need to do mine
@@ -367,12 +367,12 @@ void initCrsfTelemetry(void)
     crsfSchedule[index++] = BV(CRSF_FRAME_BATTERY_SENSOR_INDEX);
     //}
     crsfSchedule[index++] = BV(CRSF_FRAME_FLIGHT_MODE_INDEX);
-//#ifdef USE_GPS
+#ifdef USE_GPS
    // if (featureIsEnabled(FEATURE_GPS)
     //   && telemetryIsSensorEnabled(SENSOR_ALTITUDE | SENSOR_LAT_LONG | SENSOR_GROUND_SPEED | SENSOR_HEADING)) {
         crsfSchedule[index++] = BV(CRSF_FRAME_GPS_INDEX);
     //}
-//#endif
+#endif
     crsfScheduleCount = (uint8_t)index;
  }
 
@@ -390,9 +390,11 @@ bool checkCrsfTelemetryState(void)
  * if deviceInfos is asked by receiver, so do a frame to send to the receiver
  * else do a data frame if it's in time 10Hz refresh
  */
+static timeUs_t crsfLastCycleTime;
+
 void handleCrsfTelemetry(timeUs_t currentTimeUs)
 {
-    static uint32_t crsfLastCycleTime;
+
 
     if (!crsfTelemetryEnabled) {
         return;
@@ -423,5 +425,5 @@ void handleCrsfTelemetry(timeUs_t currentTimeUs)
     }
 }
 
-//#endif
+#endif
 

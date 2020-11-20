@@ -23,27 +23,18 @@
 #include <stdlib.h>
 #include <string.h>
 
-//#include "platform.h"
 
 #ifdef USE_SERIALRX_CRSF
 
-//#include "build/build_config.h"
-//#include "build/debug.h"
-
+#include "common/time.h"	//GOOD
 #include "common/crc.h"		//GOOD
 #include "common/maths.h"	//GOOD
 #include "common/utils.h"	//GOOD
 
-//#include "pg/rx.h"
-
-//#include "drivers/serial.h"     //to check
-//#include "drivers/serial_uart.h"
-//#include "drivers/system.h"
 //#include "drivers/time.h"
 
-//#include "io/serial.h"		//to check
+//#include "io/serial.h"	//to check
 
-//#include "rx/rx.h"		//remov
 #include "rx/crsf.h"		//GOOD
 
 #include "telemetry/crsf_telemetry.h"	//GOOD
@@ -63,7 +54,7 @@ STATIC_UNIT_TESTED crsfFrame_t crsfFrame;
 STATIC_UNIT_TESTED crsfFrame_t crsfChannelDataFrame;
 STATIC_UNIT_TESTED uint32_t crsfChannelData[CRSF_MAX_CHANNEL];
 
-static serialPort_t *serialPort;
+static UART_HandleTypeDef *serialPort;
 static timeUs_t crsfFrameStartAtUs = 0;
 static uint8_t telemetryBuf[CRSF_FRAME_SIZE_MAX];
 static uint8_t telemetryBufLen = 0;
@@ -240,11 +231,7 @@ STATIC_UNIT_TESTED void crsfDataReceive(uint16_t c, void *data)
     UNUSED(data);
 
     static uint8_t crsfFramePosition = 0;
-    const timeUs_t currentTimeUs = microsISR(); //return system uptime in uS, go check drivers/system.c
-
-#ifdef DEBUG_CRSF_PACKETS
-    debug[2] = currentTimeUs - crsfFrameStartAtUs;
-#endif
+    const timeUs_t currentTimeUs = microsISR(); // system uptime in uS
 
     if (cmpTimeUs(currentTimeUs, crsfFrameStartAtUs) > CRSF_TIME_NEEDED_PER_FRAME_US) {
         // We've received a character after max time needed to complete a frame,
@@ -274,28 +261,6 @@ STATIC_UNIT_TESTED void crsfDataReceive(uint16_t c, void *data)
                             memcpy(&crsfChannelDataFrame, &crsfFrame, sizeof(crsfFrame));
                         }
                         break;
-//bellec
-#if defined(USE_TELEMETRY_CRSF) && defined(USE_MSP_OVER_TELEMETRY)
-                    case CRSF_FRAMETYPE_MSP_REQ:
-                    case CRSF_FRAMETYPE_MSP_WRITE: {
-                        uint8_t *frameStart = (uint8_t *)&crsfFrame.frame.payload + CRSF_FRAME_ORIGIN_DEST_SIZE;
-                        if (bufferCrsfMspFrame(frameStart, CRSF_FRAME_RX_MSP_FRAME_SIZE)) { //ez fct in telemetry/telemtry.hc
-                            crsfScheduleMspResponse();//bellec happen in case of messy opentx
-                        }
-                        break;
-                    }
-#endif
-//bellec
-#if defined(USE_CRSF_CMS_TELEMETRY)
-                    case CRSF_FRAMETYPE_DEVICE_PING:
-                        crsfScheduleDeviceInfoResponse();//same mess than before, betaflight codding style maybe
-                        break;
-                    case CRSF_FRAMETYPE_DISPLAYPORT_CMD: {
-                        uint8_t *frameStart = (uint8_t *)&crsfFrame.frame.payload + CRSF_FRAME_ORIGIN_DEST_SIZE;
-                        crsfProcessDisplayPortCmd(frameStart);
-                        break;
-                    }
-#endif
 //usefull
 #if defined(USE_CRSF_LINK_STATISTICS)
 
@@ -388,6 +353,14 @@ static timeUs_t crsfFrameTimeUs(void)
     return lastRcFrameTimeUs;
 }
 
+
+bool crsfSetUart(UART_HandleTypeDef *huart)
+{
+	serialPort = huart;
+	return serialPort != NULL;
+}
+
+
 //rxRuntimeState in rx.h
 bool crsfRxInit(const rxConfig_t *rxConfig, rxRuntimeState_t *rxRuntimeState)
 {
@@ -402,19 +375,19 @@ bool crsfRxInit(const rxConfig_t *rxConfig, rxRuntimeState_t *rxRuntimeState)
     rxRuntimeState->rcFrameStatusFn = crsfFrameStatus;
     rxRuntimeState->rcFrameTimeUsFn = crsfFrameTimeUs;
 
-    const serialPortConfig_t *portConfig = findSerialPortConfig(FUNCTION_RX_SERIAL);
+    /*const serialPortConfig_t *portConfig = findSerialPortConfig(FUNCTION_RX_SERIAL);
     if (!portConfig) {
         return false;
-    }
+    }*/
 
-    serialPort = openSerialPort(portConfig->identifier,
+    /*serialPort = openSerialPort(portConfig->identifier,
         FUNCTION_RX_SERIAL,
         crsfDataReceive,
         NULL,
         CRSF_BAUDRATE,
         CRSF_PORT_MODE,
         CRSF_PORT_OPTIONS | (rxConfig->serialrx_inverted ? SERIAL_INVERTED : 0)
-        );
+        );*/
 
         if (rssiSource == RSSI_SOURCE_NONE) {
             rssiSource = RSSI_SOURCE_RX_PROTOCOL_CRSF;

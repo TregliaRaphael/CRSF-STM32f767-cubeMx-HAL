@@ -27,6 +27,8 @@ static inline timeDelta_t cmpTimeUs(timeUs_t a, timeUs_t b) { return (timeDelta_
 
 #define FORMATTED_DATE_TIME_BUFSIZE 30
 
+timeUs_t microsISR(void);
+
 #ifdef USE_RTC_TIME
 
 typedef struct timeConfig_s {
@@ -38,9 +40,9 @@ PG_DECLARE(timeConfig_t, timeConfig);
 // Milliseconds since Jan 1 1970
 typedef int64_t rtcTime_t;
 
-rtcTime_t rtcTimeMake(int32_t secs, uint16_t millis);
+/*rtcTime_t rtcTimeMake(int32_t secs, uint16_t millis);
 int32_t rtcTimeGetSeconds(rtcTime_t *t);
-uint16_t rtcTimeGetMillis(rtcTime_t *t);
+uint16_t rtcTimeGetMillis(rtcTime_t *t);*/
 
 typedef struct _dateTime_s {
     // full year
@@ -59,25 +61,5 @@ typedef struct _dateTime_s {
     uint16_t millis;
 } dateTime_t;
 
-// buf must be at least FORMATTED_DATE_TIME_BUFSIZE
-bool dateTimeFormatUTC(char *buf, dateTime_t *dt);
-bool dateTimeFormatLocal(char *buf, dateTime_t *dt);
-bool dateTimeFormatLocalShort(char *buf, dateTime_t *dt);
 
-void dateTimeUTCToLocal(dateTime_t *utcDateTime, dateTime_t *localDateTime);
-// dateTimeSplitFormatted splits a formatted date into its date
-// and time parts. Note that the string pointed by formatted will
-// be modifed and will become invalid after calling this function.
-bool dateTimeSplitFormatted(char *formatted, char **date, char **time);
-
-bool rtcHasTime(void);
-
-bool rtcGet(rtcTime_t *t);
-bool rtcSet(rtcTime_t *t);
-
-bool rtcGetDateTime(dateTime_t *dt);
-bool rtcSetDateTime(dateTime_t *dt);
-
-void rtcPersistWrite(int16_t offsetMinutes);
-bool rtcPersistRead(rtcTime_t *t);
 #endif

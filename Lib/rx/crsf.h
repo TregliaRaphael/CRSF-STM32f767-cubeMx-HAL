@@ -22,7 +22,6 @@
 
 #include "rx/crsf_protocol.h"
 
-
 #define CRSF_PORT_OPTIONS       (SERIAL_STOPBITS_1 | SERIAL_PARITY_NO)
 #define CRSF_PORT_MODE          MODE_RXTX
 
@@ -58,5 +57,6 @@ void crsfRxSendTelemetryData(void);
 
 struct rxConfig_s;
 struct rxRuntimeState_s;
+bool crsfSetUart(UART_HandleTypeDef *huart);
 bool crsfRxInit(const struct rxConfig_s *initialRxConfig, struct rxRuntimeState_s *rxRuntimeState);
 bool crsfRxIsActive(void);

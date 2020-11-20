@@ -54,14 +54,15 @@
 // PP_CALL(TAKE3, MULTI2, C) expands to ABC
 #define PP_CALL(macro, ...) macro(__VA_ARGS__)
 
-#if !defined(UNUSED)
+/*#if !defined(UNUSED)
 #define UNUSED(x) (void)(x) // Variables and parameters that are not used
-#endif
+#endif*/
 
 #define DISCARD(x) (void)(x) // To explicitly ignore result of x (usually an I/O register access).
 
 #define STATIC_ASSERT(condition, name) _Static_assert((condition), #name)
 
+#define STATIC_UNIT_TESTED static
 
 #define BIT(x) (1 << (x))
 

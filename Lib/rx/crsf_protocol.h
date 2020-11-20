@@ -26,6 +26,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "stm32f7xx_hal.h"
 
 #define CRSF_BAUDRATE           420000
 
