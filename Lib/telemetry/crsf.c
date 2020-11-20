@@ -38,7 +38,7 @@
 #include "common/crc.h"		//GOOD
 #include "common/maths.h"	//GOOD
 //#include "common/printf.h"	// do my own far later
-#include "common/streambuf.h"   //GOOD
+#include "common/mstreambuf.h"   //GOOD
 #include "common/utils.h"	//GOOD
 
 //#include "cms/cms.h"		// see yah soon

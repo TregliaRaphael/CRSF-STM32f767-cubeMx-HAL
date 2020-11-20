@@ -41,7 +41,7 @@
 #include "drivers/system.h"
 #include "drivers/time.h"
 
-#include "io/serial.h"		//to check
+//#include "io/serial.h"		//to check
 
 #include "rx/rx.h"		//remov
 #include "rx/crsf.h"		//GOOD

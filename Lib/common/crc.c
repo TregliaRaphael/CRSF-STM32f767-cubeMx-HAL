@@ -22,7 +22,7 @@
 
 //#include "platform.h"
 
-#include "streambuf.h"
+#include "mstreambuf.h"
 
 
 uint16_t crc16_ccitt(uint16_t crc, unsigned char a)
