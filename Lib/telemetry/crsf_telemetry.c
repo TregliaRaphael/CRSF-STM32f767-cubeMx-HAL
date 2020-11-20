@@ -25,7 +25,7 @@
 
 //#include "platform.h"
 
-#ifdef USE_TELEMETRY_CRSF
+//#ifdef USE_TELEMETRY_CRSF
 
 //#include "build/atomic.h"	//unit tests *spit*
 //#include "build/build_config.h"//maybe need to do mine
@@ -63,7 +63,7 @@
 
 //#include "telemetry/telemetry.h"     // next thing to implem to handle all my sensors ez
 
-#include "telemetry/crsf.h"	//GOOD
+#include "telemetry/crsf_telemetry.h"	//GOOD
 
 
 #define CRSF_CYCLETIME_US                   100000 // 100ms, 10 Hz
@@ -423,5 +423,5 @@ void handleCrsfTelemetry(timeUs_t currentTimeUs)
     }
 }
 
-#endif
+//#endif
 

@@ -36,17 +36,17 @@
 
 //#include "pg/rx.h"
 
-#include "drivers/serial.h"     //to check
-#include "drivers/serial_uart.h"
-#include "drivers/system.h"
-#include "drivers/time.h"
+//#include "drivers/serial.h"     //to check
+//#include "drivers/serial_uart.h"
+//#include "drivers/system.h"
+//#include "drivers/time.h"
 
 //#include "io/serial.h"		//to check
 
-#include "rx/rx.h"		//remov
+//#include "rx/rx.h"		//remov
 #include "rx/crsf.h"		//GOOD
 
-#include "telemetry/crsf.h"	//GOOD
+#include "telemetry/crsf_telemetry.h"	//GOOD
 
 #define CRSF_TIME_NEEDED_PER_FRAME_US   1100 // 700 ms + 400 ms for potential ad-hoc request
 #define CRSF_TIME_BETWEEN_FRAMES_US     6667 // At fastest, frames are sent by the transmitter every 6.667 milliseconds, 150 Hz
