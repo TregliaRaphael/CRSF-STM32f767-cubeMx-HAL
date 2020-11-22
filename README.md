@@ -5,6 +5,16 @@ TODO: Makefile need to handle multiple file with same name on different director
 For now, i'm able to send telemetry like GPS/Current/attitude ... and receive all needed from CRSF protocol to play.
 It receives channels and linkquality.
 
+#### To add in makefile:
+```
+-DUSE_CRSF_LINK_STATISTICS \
+-DUSE_RX_RSSI_DBM \
+-DUSE_RX_LINK_QUALITY_INFO \
+-DUSE_SERIALRX_CRSF \
+-DUSE_TELEMETRY_CRSF \
+-DUSE_GPS \
+```
+
 #### Includes:
 ```
 #include "common/time.h"
