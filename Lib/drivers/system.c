@@ -77,7 +77,7 @@ timeUs_t microsISR(void)
     return ((ms + pending) * 1000) + (usTicks * 1000 - cycle_cnt) / usTicks;
 }
 
-/*uint32_t micros(void)
+uint32_t micros(void)
 {
     register uint32_t ms, cycle_cnt;
 
@@ -93,4 +93,4 @@ timeUs_t microsISR(void)
     } while (ms != sysTickUptime || cycle_cnt > sysTickValStamp);
 
     return (ms * 1000) + (usTicks * 1000 - cycle_cnt) / usTicks;
-}*/
+}

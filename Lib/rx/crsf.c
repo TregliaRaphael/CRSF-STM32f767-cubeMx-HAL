@@ -26,18 +26,17 @@
 
 #ifdef USE_SERIALRX_CRSF
 
-#include "common/time.h"	//GOOD
-#include "common/crc.h"		//GOOD
-#include "common/maths.h"	//GOOD
-#include "common/utils.h"	//GOOD
+#include "common/time.h"	
+#include "common/crc.h"		
+#include "common/maths.h"	
+#include "common/utils.h"	
 
-//#include "io/serial.h"	//to check
 
-#include "pg/rx.h"
+#include "pg/rx.h"          //rxConfig
 #include "rx/rx.h"
-#include "rx/crsf.h"		//GOOD
+#include "rx/crsf.h"		
 
-#include "telemetry/crsf_telemetry.h"	//GOOD
+#include "telemetry/crsf_telemetry.h"	
 
 #define CRSF_TIME_NEEDED_PER_FRAME_US   1100 // 700 ms + 400 ms for potential ad-hoc request
 #define CRSF_TIME_BETWEEN_FRAMES_US     6667 // At fastest, frames are sent by the transmitter every 6.667 milliseconds, 150 Hz
@@ -60,6 +59,7 @@ static uint8_t telemetryBuf[CRSF_FRAME_SIZE_MAX];
 static uint8_t telemetryBufLen = 0;
 
 static timeUs_t lastRcFrameTimeUs = 0;
+
 
 /*
  * CRSF protocol
@@ -152,7 +152,7 @@ static void handleCrsfLinkStatisticsFrame(const crsfLinkStatistics_t* statsPtr, 
     int16_t rssiDbm = -1 * (stats.active_antenna ? stats.uplink_RSSI_2 : stats.uplink_RSSI_1);
     if (rssiSource == RSSI_SOURCE_RX_PROTOCOL_CRSF) {
         const uint16_t rssiPercentScaled = scaleRange(rssiDbm, CRSF_RSSI_MIN, 0, 0, RSSI_MAX_VALUE); //common/math.h
-        setRssi(rssiPercentScaled, RSSI_SOURCE_RX_PROTOCOL_CRSF); //can be replace to set my own
+        setRssi(rssiPercentScaled, RSSI_SOURCE_RX_PROTOCOL_CRSF);
     }
 #ifdef USE_RX_RSSI_DBM
     if (rxConfig()->crsf_use_rx_snr) {
@@ -168,7 +168,7 @@ static void handleCrsfLinkStatisticsFrame(const crsfLinkStatistics_t* statsPtr, 
     }
 #endif
 
-    switch (debugMode) {
+    /*switch (debugMode) {
     case DEBUG_CRSF_LINK_STATISTICS_UPLINK:
         DEBUG_SET(DEBUG_CRSF_LINK_STATISTICS_UPLINK, 0, stats.uplink_RSSI_1);
         DEBUG_SET(DEBUG_CRSF_LINK_STATISTICS_UPLINK, 1, stats.uplink_RSSI_2);
@@ -185,7 +185,7 @@ static void handleCrsfLinkStatisticsFrame(const crsfLinkStatistics_t* statsPtr, 
         DEBUG_SET(DEBUG_CRSF_LINK_STATISTICS_DOWN, 1, stats.downlink_Link_quality);
         DEBUG_SET(DEBUG_CRSF_LINK_STATISTICS_DOWN, 2, stats.downlink_SNR);
         break;
-    }
+    }*/
 
 }
 #endif
@@ -343,7 +343,7 @@ void crsfRxSendTelemetryData(void)
 {
     // if there is telemetry data to write
     if (telemetryBufLen > 0) {
-	HAL_UART_Transmit(serialPort, telemetryBuf, telemetryBufLen, 50);
+	HAL_UART_Transmit_DMA(serialPort, telemetryBuf, telemetryBufLen);
         //serialWriteBuf(serialPort, telemetryBuf, telemetryBufLen);
         telemetryBufLen = 0; // reset telemetry buffer
     }
@@ -355,41 +355,20 @@ static timeUs_t crsfFrameTimeUs(void)
 }
 
 
-bool crsfSetUart(UART_HandleTypeDef *huart)
+bool crsfRxConfigInit(void)
 {
-	serialPort = huart;
-	return serialPort != NULL;
+	return true;
 }
 
 
 //rxRuntimeState in rx.h
-bool crsfRxInit(const rxConfig_t *rxConfig/*, rxRuntimeState_t *rxRuntimeState*/)
+bool crsfRxInit(UART_HandleTypeDef *huart)
 {
+    crsfRxConfigInit(); //do smtg in to config rx
+
     for (int ii = 0; ii < CRSF_MAX_CHANNEL; ++ii) {
-        crsfChannelData[ii] = (16 * rxConfig->midrc) / 10 - 1408;
+        crsfChannelData[ii] = (16 * rxConfig()->midrc) / 10 - 1408;
     }
-
-    /*rxRuntimeState->channelCount = CRSF_MAX_CHANNEL;
-    rxRuntimeState->rxRefreshRate = CRSF_TIME_BETWEEN_FRAMES_US; //!!TODO this needs checking
-
-    rxRuntimeState->rcReadRawFn = crsfReadRawRC;
-    rxRuntimeState->rcFrameStatusFn = crsfFrameStatus;
-    rxRuntimeState->rcFrameTimeUsFn = crsfFrameTimeUs;
-
-    const serialPortConfig_t *portConfig = findSerialPortConfig(FUNCTION_RX_SERIAL);
-    if (!portConfig) {
-        return false;
-    }
-
-    serialPort = openSerialPort(portConfig->identifier,
-        FUNCTION_RX_SERIAL,
-        crsfDataReceive,
-        NULL,
-        CRSF_BAUDRATE,
-        CRSF_PORT_MODE,
-        CRSF_PORT_OPTIONS | (rxConfig->serialrx_inverted ? SERIAL_INVERTED : 0)
-        );*/
-
         if (rssiSource == RSSI_SOURCE_NONE) {
             rssiSource = RSSI_SOURCE_RX_PROTOCOL_CRSF;
         }
@@ -398,7 +377,8 @@ bool crsfRxInit(const rxConfig_t *rxConfig/*, rxRuntimeState_t *rxRuntimeState*/
             linkQualitySource = LQ_SOURCE_RX_PROTOCOL_CRSF;
         }
 #endif
-
+   
+    serialPort = huart;
     return serialPort != NULL;
 }
 

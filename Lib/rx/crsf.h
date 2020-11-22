@@ -57,6 +57,6 @@ void crsfRxSendTelemetryData(void);
 
 struct rxConfig_s;
 struct rxRuntimeState_s;
-bool crsfSetUart(UART_HandleTypeDef *huart);
-bool crsfRxInit(const struct rxConfig_s *initialRxConfig/*, struct rxRuntimeState_s *rxRuntimeState*/);
+bool crsfRxConfigInit(void);
+bool crsfRxInit(UART_HandleTypeDef *huart);
 bool crsfRxIsActive(void);

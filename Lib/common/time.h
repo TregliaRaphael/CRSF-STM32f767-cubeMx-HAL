@@ -28,6 +28,7 @@ static inline timeDelta_t cmpTimeUs(timeUs_t a, timeUs_t b) { return (timeDelta_
 #define FORMATTED_DATE_TIME_BUFSIZE 30
 
 timeUs_t microsISR(void);
+timeUs_t micros(void);
 
 #ifdef USE_RTC_TIME
 

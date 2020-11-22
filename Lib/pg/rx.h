@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "common/time.h"
 #include "pg/pg.h"
 
 #define GET_FRAME_ERR_LPF_FREQUENCY(period) (1 / (period / 10.0f))

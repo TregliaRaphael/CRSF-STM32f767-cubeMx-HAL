@@ -109,12 +109,14 @@ typedef struct rxFailsafeChannelConfig_s {
     uint8_t step;
 } rxFailsafeChannelConfig_t;
 
+PG_DECLARE_ARRAY(rxFailsafeChannelConfig_t, MAX_SUPPORTED_RC_CHANNEL_COUNT, rxFailsafeChannelConfigs);
 
 typedef struct rxChannelRangeConfig_s {
     uint16_t min;
     uint16_t max;
 } rxChannelRangeConfig_t;
 
+PG_DECLARE_ARRAY(rxChannelRangeConfig_t, NON_AUX_CHANNEL_COUNT, rxChannelRangeConfigs);
 
 struct rxRuntimeState_s;
 typedef uint16_t (*rcReadRawDataFnPtr)(const struct rxRuntimeState_s *rxRuntimeState, uint8_t chan); // used by receiver driver to return channel data
@@ -133,7 +135,7 @@ typedef enum {
 
 typedef struct rxRuntimeState_s {
     rxProvider_t        rxProvider;
-    SerialRXType        serialrxProvider;
+    SerialRXType	serialrxProvider;
     uint8_t             channelCount; // number of RC channels as reported by current input driver
     uint16_t            rxRefreshRate;
     rcReadRawDataFnPtr  rcReadRawFn;
@@ -144,6 +146,9 @@ typedef struct rxRuntimeState_s {
     void                *frameData;
 } rxRuntimeState_t;
 
+void rxInit(void);
+
+//RSSI
 typedef enum {
     RSSI_SOURCE_NONE = 0,
     RSSI_SOURCE_ADC,
@@ -156,7 +161,32 @@ typedef enum {
 
 extern rssiSource_e rssiSource;
 
+#define RSSI_MAX_VALUE 1023
+void setRssiDirect(uint16_t newRssi, rssiSource_e source);
+void setRssi(uint16_t rssiValue, rssiSource_e source);
+
+uint16_t getRssi(void);
+uint8_t getRssiPercent(void);
+bool isRssiConfigured(void);
+
+//LQ
 typedef enum {
     LQ_SOURCE_NONE = 0,
     LQ_SOURCE_RX_PROTOCOL_CRSF,
 } linkQualitySource_e;
+
+extern linkQualitySource_e linkQualitySource;
+
+#define LINK_QUALITY_MAX_VALUE 1023
+void rxSetRfMode(uint8_t rfModeValue);
+void setLinkQualityDirect(uint16_t linkqualityValue);
+
+uint16_t rxGetLinkQuality(void);
+uint16_t rxGetLinkQualityPercent(void);
+uint8_t rxGetRfMode(void);
+
+//RSSI_DBM
+void setRssiDbm(int16_t newRssiDbm, rssiSource_e source);
+void setRssiDbmDirect(int16_t newRssiDbm, rssiSource_e source);
+
+int16_t getRssiDbm(void);
