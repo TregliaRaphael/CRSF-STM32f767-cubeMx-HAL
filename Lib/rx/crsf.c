@@ -59,7 +59,7 @@ static uint8_t telemetryBuf[CRSF_FRAME_SIZE_MAX];
 static uint8_t telemetryBufLen = 0;
 
 static timeUs_t lastRcFrameTimeUs = 0;
-
+crsfDebug_t crsfDebugs;
 
 /*
  * CRSF protocol
@@ -154,9 +154,9 @@ static void handleCrsfLinkStatisticsFrame(const crsfLinkStatistics_t* statsPtr, 
         setRssi(rssiPercentScaled, RSSI_SOURCE_RX_PROTOCOL_CRSF);
     }
 #ifdef USE_RX_RSSI_DBM
-    if (rxConfig()->crsf_use_rx_snr) {
+    /*if (rxConfig()->crsf_use_rx_snr) {
         rssiDbm = stats.uplink_SNR;
-    }
+    }*/
     setRssiDbm(rssiDbm, RSSI_SOURCE_RX_PROTOCOL_CRSF); 
 #endif
 
@@ -178,11 +178,11 @@ static void crsfCheckRssi(uint32_t currentTimeUs) {
         if (rssiSource == RSSI_SOURCE_RX_PROTOCOL_CRSF) {
             setRssiDirect(0, RSSI_SOURCE_RX_PROTOCOL_CRSF);
 #ifdef USE_RX_RSSI_DBM
-            if (rxConfig()->crsf_use_rx_snr) {
+            /*if (rxConfig()->crsf_use_rx_snr) {
                 setRssiDbmDirect(CRSF_SNR_MIN, RSSI_SOURCE_RX_PROTOCOL_CRSF);
-            } else {
+            } else {*/
                 setRssiDbmDirect(CRSF_RSSI_MIN, RSSI_SOURCE_RX_PROTOCOL_CRSF);
-            }
+            //}
 #endif
         }
 #ifdef USE_RX_LINK_QUALITY_INFO
@@ -254,8 +254,10 @@ uint16_t crsfReadRawRC(uint8_t chan)
 
 
 // Receive ISR callback, called back from serial port
-void crsfRxCallback(uint16_t c)
+void crsfRxCallback(uint8_t c)
 {
+    crsfDebugs.nbrCallback++;
+
     static uint8_t crsfFramePosition = 0;
     const timeUs_t currentTimeUs = microsISR(); // system uptime in uS
 
@@ -275,9 +277,11 @@ void crsfRxCallback(uint16_t c)
     if (crsfFramePosition < fullFrameLength) {
         crsfFrame.bytes[crsfFramePosition++] = (uint8_t)c;
         if (crsfFramePosition >= fullFrameLength) {
+            crsfDebugs.nbrCrc++;
             crsfFramePosition = 0;
             const uint8_t crc = crsfFrameCRC();
             if (crc == crsfFrame.bytes[fullFrameLength - 1]) {
+                crsfDebugs.nbrSwitch++;
                 switch (crsfFrame.frame.type)
                 {
                     case CRSF_FRAMETYPE_RC_CHANNELS_PACKED:
@@ -286,6 +290,7 @@ void crsfRxCallback(uint16_t c)
                             crsfFrameDone = true;
                             memcpy(&crsfChannelDataFrame, &crsfFrame, sizeof(crsfFrame));
                             crsfFrameStatus(); //maybe add checks on it later
+                            crsfDebugs.nbrChanFrameRec++;
                         }
                         break;
 //usefull
@@ -300,6 +305,7 @@ void crsfRxCallback(uint16_t c)
                              handleCrsfLinkStatisticsFrame(statsFrame, currentTimeUs);
                          }
                         break;
+                        crsfDebugs.nbrLQFrameRec++;
                     }
 #endif
                     default:

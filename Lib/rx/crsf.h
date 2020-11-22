@@ -52,11 +52,21 @@ typedef union crsfFrame_u {
     crsfFrameDef_t frame;
 } crsfFrame_t;
 
+typedef struct crsfDebug_s {
+    uint8_t nbrCrc;
+    uint8_t nbrSwitch;
+    uint8_t nbrCallback;
+    uint8_t nbrChanFrameRec;
+    uint8_t nbrLQFrameRec;
+} crsfDebug_t;
+
+extern crsfDebug_t crsfDebugs;
+
 void crsfRxWriteTelemetryData(const void *data, int len);
 void crsfRxSendTelemetryData(void);
 
 uint16_t crsfReadRawRC(uint8_t chan);
-void crsfRxCallback(uint16_t c);
+void crsfRxCallback(uint8_t c);
 timeUs_t crsfFrameTimeUs(void);
 
 struct rxConfig_s;

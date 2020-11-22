@@ -78,11 +78,13 @@ uint16_t getRssi(void)
     uint16_t rssiValue = rssi;
 
     // RSSI_Invert option
-    if (rxConfig()->rssi_invert) {
+    /*if (rxConfig()->rssi_invert) {
         rssiValue = RSSI_MAX_VALUE - rssiValue;
     }
 
     return rxConfig()->rssi_scale / 100.0f * rssiValue + rxConfig()->rssi_offset * RSSI_OFFSET_SCALING;
+    */
+    return rssiValue;
 }
 
 uint8_t getRssiPercent(void)
@@ -95,7 +97,7 @@ bool isRssiConfigured(void)
     return rssiSource != RSSI_SOURCE_NONE;
 }
 
-/*TODO 
+ 
 #ifdef USE_RX_LINK_QUALITY_INFO
 #define LINK_QUALITY_SAMPLE_COUNT 16
 
@@ -142,7 +144,7 @@ static void setLinkQuality(bool validFrame, timeDelta_t currentDeltaTimeUs)
             resampleTimeUs -= FRAME_ERR_RESAMPLE_US;
         }
     }
-}*/
+}
 
 
 void setLinkQualityDirect(uint16_t linkqualityValue)

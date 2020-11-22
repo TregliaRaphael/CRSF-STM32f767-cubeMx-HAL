@@ -178,6 +178,7 @@ typedef enum {
 extern linkQualitySource_e linkQualitySource;
 
 #define LINK_QUALITY_MAX_VALUE 1023
+
 void rxSetRfMode(uint8_t rfModeValue);
 void setLinkQualityDirect(uint16_t linkqualityValue);
 
