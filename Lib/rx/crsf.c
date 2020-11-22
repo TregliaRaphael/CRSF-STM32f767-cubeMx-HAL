@@ -143,8 +143,7 @@ typedef struct crsfPayloadLinkstatistics_s {
 
 static timeUs_t lastLinkStatisticsFrameUs;
 
-//rssiSource => enum dans rx.h, peut se remplacer par un define
-//not usefull, everything in statsPtr
+
 static void handleCrsfLinkStatisticsFrame(const crsfLinkStatistics_t* statsPtr, timeUs_t currentTimeUs)
 {
     const crsfLinkStatistics_t stats = *statsPtr;
@@ -167,25 +166,6 @@ static void handleCrsfLinkStatisticsFrame(const crsfLinkStatistics_t* statsPtr, 
         rxSetRfMode(stats.rf_Mode);
     }
 #endif
-
-    /*switch (debugMode) {
-    case DEBUG_CRSF_LINK_STATISTICS_UPLINK:
-        DEBUG_SET(DEBUG_CRSF_LINK_STATISTICS_UPLINK, 0, stats.uplink_RSSI_1);
-        DEBUG_SET(DEBUG_CRSF_LINK_STATISTICS_UPLINK, 1, stats.uplink_RSSI_2);
-        DEBUG_SET(DEBUG_CRSF_LINK_STATISTICS_UPLINK, 2, stats.uplink_Link_quality);
-        DEBUG_SET(DEBUG_CRSF_LINK_STATISTICS_UPLINK, 3, stats.rf_Mode);
-        break;
-    case DEBUG_CRSF_LINK_STATISTICS_PWR:
-        DEBUG_SET(DEBUG_CRSF_LINK_STATISTICS_PWR, 0, stats.active_antenna);
-        DEBUG_SET(DEBUG_CRSF_LINK_STATISTICS_PWR, 1, stats.uplink_SNR);
-        DEBUG_SET(DEBUG_CRSF_LINK_STATISTICS_PWR, 2, stats.uplink_TX_Power);
-        break;
-    case DEBUG_CRSF_LINK_STATISTICS_DOWN:
-        DEBUG_SET(DEBUG_CRSF_LINK_STATISTICS_DOWN, 0, stats.downlink_RSSI);
-        DEBUG_SET(DEBUG_CRSF_LINK_STATISTICS_DOWN, 1, stats.downlink_Link_quality);
-        DEBUG_SET(DEBUG_CRSF_LINK_STATISTICS_DOWN, 2, stats.downlink_SNR);
-        break;
-    }*/
 
 }
 #endif
@@ -225,68 +205,9 @@ STATIC_UNIT_TESTED uint8_t crsfFrameCRC(void)
     return crc;
 }
 
-// Receive ISR callback, called back from serial port
-STATIC_UNIT_TESTED void crsfDataReceive(uint16_t c, void *data)
+
+STATIC_UNIT_TESTED uint8_t crsfFrameStatus(void)
 {
-    UNUSED(data);
-
-    static uint8_t crsfFramePosition = 0;
-    const timeUs_t currentTimeUs = microsISR(); // system uptime in uS
-
-    if (cmpTimeUs(currentTimeUs, crsfFrameStartAtUs) > CRSF_TIME_NEEDED_PER_FRAME_US) {
-        // We've received a character after max time needed to complete a frame,
-        // so this must be the start of a new frame.
-        crsfFramePosition = 0;
-    }
-
-    if (crsfFramePosition == 0) {
-        crsfFrameStartAtUs = currentTimeUs;
-    }
-    // assume frame is 5 bytes long until we have received the frame length
-    // full frame length includes the length of the address and framelength fields
-    const int fullFrameLength = crsfFramePosition < 3 ? 5 : crsfFrame.frame.frameLength + CRSF_FRAME_LENGTH_ADDRESS + CRSF_FRAME_LENGTH_FRAMELENGTH;
-
-    if (crsfFramePosition < fullFrameLength) {
-        crsfFrame.bytes[crsfFramePosition++] = (uint8_t)c;
-        if (crsfFramePosition >= fullFrameLength) {
-            crsfFramePosition = 0;
-            const uint8_t crc = crsfFrameCRC();
-            if (crc == crsfFrame.bytes[fullFrameLength - 1]) {
-                switch (crsfFrame.frame.type)
-                {
-                    case CRSF_FRAMETYPE_RC_CHANNELS_PACKED:
-                        if (crsfFrame.frame.deviceAddress == CRSF_ADDRESS_FLIGHT_CONTROLLER) {
-                            lastRcFrameTimeUs = currentTimeUs;
-                            crsfFrameDone = true;
-                            memcpy(&crsfChannelDataFrame, &crsfFrame, sizeof(crsfFrame));
-                        }
-                        break;
-//usefull
-#if defined(USE_CRSF_LINK_STATISTICS)
-
-                    case CRSF_FRAMETYPE_LINK_STATISTICS: {
-                         // if to FC and 10 bytes + CRSF_FRAME_ORIGIN_DEST_SIZE
-                         if ((rssiSource == RSSI_SOURCE_RX_PROTOCOL_CRSF) &&
-                             (crsfFrame.frame.deviceAddress == CRSF_ADDRESS_FLIGHT_CONTROLLER) &&
-                             (crsfFrame.frame.frameLength == CRSF_FRAME_ORIGIN_DEST_SIZE + CRSF_FRAME_LINK_STATISTICS_PAYLOAD_SIZE)) {
-                             const crsfLinkStatistics_t* statsFrame = (const crsfLinkStatistics_t*)&crsfFrame.frame.payload;
-                             handleCrsfLinkStatisticsFrame(statsFrame, currentTimeUs);
-                         }
-                        break;
-                    }
-#endif
-                    default:
-                        break;
-                }
-            }
-        }
-    }
-}
-
-//usefull
-STATIC_UNIT_TESTED uint8_t crsfFrameStatus(/*rxRuntimeState_t *rxRuntimeState*/void)
-{
-    //UNUSED(rxRuntimeState);
 
 #if defined(USE_CRSF_LINK_STATISTICS)
     crsfCheckRssi(micros());
@@ -318,9 +239,8 @@ STATIC_UNIT_TESTED uint8_t crsfFrameStatus(/*rxRuntimeState_t *rxRuntimeState*/v
 }
 
 //usefull
-STATIC_UNIT_TESTED uint16_t crsfReadRawRC(/*const rxRuntimeState_t *rxRuntimeState, */uint8_t chan)
+uint16_t crsfReadRawRC(uint8_t chan)
 {
-    //UNUSED(rxRuntimeState);
     /* conversion from RC value to PWM
      *       RC     PWM
      * min  172 ->  988us
@@ -331,6 +251,65 @@ STATIC_UNIT_TESTED uint16_t crsfReadRawRC(/*const rxRuntimeState_t *rxRuntimeSta
      */
     return (0.62477120195241f * crsfChannelData[chan]) + 881;
 }
+
+
+// Receive ISR callback, called back from serial port
+void crsfRxCallback(uint16_t c)
+{
+    static uint8_t crsfFramePosition = 0;
+    const timeUs_t currentTimeUs = microsISR(); // system uptime in uS
+
+    if (cmpTimeUs(currentTimeUs, crsfFrameStartAtUs) > CRSF_TIME_NEEDED_PER_FRAME_US) {
+        // We've received a character after max time needed to complete a frame,
+        // so this must be the start of a new frame.
+        crsfFramePosition = 0;
+    }
+
+    if (crsfFramePosition == 0) {
+        crsfFrameStartAtUs = currentTimeUs;
+    }
+    // assume frame is 5 bytes long until we have received the frame length
+    // full frame length includes the length of the address and framelength fields
+    const int fullFrameLength = crsfFramePosition < 3 ? 5 : crsfFrame.frame.frameLength + CRSF_FRAME_LENGTH_ADDRESS + CRSF_FRAME_LENGTH_FRAMELENGTH;
+
+    if (crsfFramePosition < fullFrameLength) {
+        crsfFrame.bytes[crsfFramePosition++] = (uint8_t)c;
+        if (crsfFramePosition >= fullFrameLength) {
+            crsfFramePosition = 0;
+            const uint8_t crc = crsfFrameCRC();
+            if (crc == crsfFrame.bytes[fullFrameLength - 1]) {
+                switch (crsfFrame.frame.type)
+                {
+                    case CRSF_FRAMETYPE_RC_CHANNELS_PACKED:
+                        if (crsfFrame.frame.deviceAddress == CRSF_ADDRESS_FLIGHT_CONTROLLER) {
+                            lastRcFrameTimeUs = currentTimeUs;
+                            crsfFrameDone = true;
+                            memcpy(&crsfChannelDataFrame, &crsfFrame, sizeof(crsfFrame));
+                            crsfFrameStatus(); //maybe add checks on it later
+                        }
+                        break;
+//usefull
+#if defined(USE_CRSF_LINK_STATISTICS)
+
+                    case CRSF_FRAMETYPE_LINK_STATISTICS: {
+                         // if to FC and 10 bytes + CRSF_FRAME_ORIGIN_DEST_SIZE
+                         if ((rssiSource == RSSI_SOURCE_RX_PROTOCOL_CRSF) &&
+                             (crsfFrame.frame.deviceAddress == CRSF_ADDRESS_FLIGHT_CONTROLLER) &&
+                             (crsfFrame.frame.frameLength == CRSF_FRAME_ORIGIN_DEST_SIZE + CRSF_FRAME_LINK_STATISTICS_PAYLOAD_SIZE)) {
+                             const crsfLinkStatistics_t* statsFrame = (const crsfLinkStatistics_t*)&crsfFrame.frame.payload;
+                             handleCrsfLinkStatisticsFrame(statsFrame, currentTimeUs);
+                         }
+                        break;
+                    }
+#endif
+                    default:
+                        break;
+                }
+            }
+        }
+    }
+}
+
 
 void crsfRxWriteTelemetryData(const void *data, int len)
 {
@@ -349,25 +328,17 @@ void crsfRxSendTelemetryData(void)
     }
 }
 
-static timeUs_t crsfFrameTimeUs(void)
+timeUs_t crsfFrameTimeUs(void)
 {
     return lastRcFrameTimeUs;
 }
 
 
-bool crsfRxConfigInit(void)
-{
-	return true;
-}
-
-
-//rxRuntimeState in rx.h
 bool crsfRxInit(UART_HandleTypeDef *huart)
 {
-    crsfRxConfigInit(); //do smtg in to config rx
 
     for (int ii = 0; ii < CRSF_MAX_CHANNEL; ++ii) {
-        crsfChannelData[ii] = (16 * rxConfig()->midrc) / 10 - 1408;
+        crsfChannelData[ii] = (16 * /*rxConfig()->midrc*/992) / 10 - 1408;
     }
         if (rssiSource == RSSI_SOURCE_NONE) {
             rssiSource = RSSI_SOURCE_RX_PROTOCOL_CRSF;

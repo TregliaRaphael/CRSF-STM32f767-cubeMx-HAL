@@ -28,10 +28,10 @@ const char rcChannelLetters[] = "AERT12345678abcdefgh";
 int16_t rcData[MAX_SUPPORTED_RC_CHANNEL_COUNT];     // interval [1000;2000]
 
 
-/*void rxInit(void)
+void rxInit(void)
 {
-
-}*/
+  
+}
 
 void setRssiDirect(uint16_t newRssi, rssiSource_e source)
 {
@@ -95,7 +95,7 @@ bool isRssiConfigured(void)
     return rssiSource != RSSI_SOURCE_NONE;
 }
 
-
+/*TODO 
 #ifdef USE_RX_LINK_QUALITY_INFO
 #define LINK_QUALITY_SAMPLE_COUNT 16
 
@@ -142,7 +142,7 @@ static void setLinkQuality(bool validFrame, timeDelta_t currentDeltaTimeUs)
             resampleTimeUs -= FRAME_ERR_RESAMPLE_US;
         }
     }
-}
+}*/
 
 
 void setLinkQualityDirect(uint16_t linkqualityValue)

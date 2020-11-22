@@ -55,8 +55,11 @@ typedef union crsfFrame_u {
 void crsfRxWriteTelemetryData(const void *data, int len);
 void crsfRxSendTelemetryData(void);
 
+uint16_t crsfReadRawRC(uint8_t chan);
+void crsfRxCallback(uint16_t c);
+timeUs_t crsfFrameTimeUs(void);
+
 struct rxConfig_s;
 struct rxRuntimeState_s;
-bool crsfRxConfigInit(void);
 bool crsfRxInit(UART_HandleTypeDef *huart);
 bool crsfRxIsActive(void);
