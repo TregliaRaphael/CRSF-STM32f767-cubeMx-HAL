@@ -249,7 +249,8 @@ uint16_t crsfReadRawRC(uint8_t chan)
      * scale factor = (2012-988) / (1811-172) = 0.62477120195241
      * offset = 988 - 172 * 0.62477120195241 = 880.53935326418548
      */
-    return (0.62477120195241f * crsfChannelData[chan]) + 881;
+    //return (0.62477120195241f * crsfChannelData[chan]) + 881;
+    return (0.610738255f * crsfChannelData[chan]) + 895; //just for my radio
 }
 
 
@@ -328,8 +329,8 @@ void crsfRxSendTelemetryData(void)
 {
     // if there is telemetry data to write
     if (telemetryBufLen > 0) {
-	HAL_UART_Transmit_DMA(serialPort, telemetryBuf, telemetryBufLen);
-        //serialWriteBuf(serialPort, telemetryBuf, telemetryBufLen);
+        // dont use DMA, need to be send without jitter
+	    HAL_UART_Transmit(serialPort, telemetryBuf, telemetryBufLen, 500);
         telemetryBufLen = 0; // reset telemetry buffer
     }
 }

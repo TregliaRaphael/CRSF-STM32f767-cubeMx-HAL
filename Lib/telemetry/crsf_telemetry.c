@@ -27,27 +27,12 @@
 
 #ifdef USE_TELEMETRY_CRSF
 
-//#include "build/atomic.h"	//unit tests *spit*
-//#include "build/build_config.h"//maybe need to do mine
-//#include "build/version.h"	// too
-
-//#include "config/feature.h"	//useless maybe implem mine? nah
 #include "pg/pg.h"		// only import PG_DECLARE, i removed other fct
-//#include "pg/pg_ids.h"	//useless
 
 #include "common/crc.h"		//GOOD
 #include "common/maths.h"	//GOOD
-//#include "common/printf.h"	// do my own far later
 #include "common/mstreambuf.h"   //GOOD
 #include "common/utils.h"	//GOOD
-
-//#include "cms/cms.h"		// see yah soon
-
-//#include "drivers/nvic.h"	//GOOD but not sure it's usefull, maybe remove later but keep quoted in case
-
-//#include "config/config.h" 	//can be skipped, need remove some code
-//#include "fc/rc_modes.h"	//same
-//#include "fc/runtime_config.h"// to get all from fc/config
 
 #include "flight/imu.h"		// for atttttitude
 //#include "flight/position.h"	// for alllllltitude
@@ -303,6 +288,8 @@ typedef enum {
 static uint8_t crsfScheduleCount;
 static uint8_t crsfSchedule[CRSF_SCHEDULE_COUNT_MAX];
 
+crsfTelDebug_t crsfTelDebugs;
+
 //-------------CHECKED--------------
 static void processCrsf(void)
 {
@@ -336,6 +323,7 @@ static void processCrsf(void)
         crsfFinalize(dst);
     }
 //#endif
+
     crsfScheduleIndex = (crsfScheduleIndex + 1) % crsfScheduleCount;
 }
 
@@ -359,20 +347,11 @@ void initCrsfTelemetry(void)
 
     deviceInfoReplyPending = false;
     int index = 0;
-    //if (sensors(SENSOR_ACC) && telemetryIsSensorEnabled(SENSOR_PITCH | SENSOR_ROLL | SENSOR_HEADING)) {
     crsfSchedule[index++] = BV(CRSF_FRAME_ATTITUDE_INDEX);
-    //}
-    //if ((isBatteryVoltageConfigured() && telemetryIsSensorEnabled(SENSOR_VOLTAGE))
-    //    || (isAmperageConfigured() && telemetryIsSensorEnabled(SENSOR_CURRENT | SENSOR_FUEL))) {
     crsfSchedule[index++] = BV(CRSF_FRAME_BATTERY_SENSOR_INDEX);
-    //}
     crsfSchedule[index++] = BV(CRSF_FRAME_FLIGHT_MODE_INDEX);
-#ifdef USE_GPS
-   // if (featureIsEnabled(FEATURE_GPS)
-    //   && telemetryIsSensorEnabled(SENSOR_ALTITUDE | SENSOR_LAT_LONG | SENSOR_GROUND_SPEED | SENSOR_HEADING)) {
-        crsfSchedule[index++] = BV(CRSF_FRAME_GPS_INDEX);
-    //}
-#endif
+    crsfSchedule[index++] = BV(CRSF_FRAME_GPS_INDEX);
+
     crsfScheduleCount = (uint8_t)index;
  }
 
