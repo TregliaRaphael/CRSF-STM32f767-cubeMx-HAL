@@ -5,7 +5,8 @@ TODO: Makefile need to handle multiple file with same name on different director
 For now, i'm able to send telemetry like GPS/Current/attitude ... and receive all needed from CRSF protocol to play.
 It receives channels and linkquality.
 
-I tested it on USART6 with 420k baud rate and circular mode DMA or tx and rx.
+I tested it on USART6 with 420k baud rate and circular mode DMA on rx.
+For tx telemetry, it should stay stock and put in a scheduler. It has to be sent at a very strict time or it just wont works (lost 2hours on it already)
 If you used another board than f7, you should just change few includes from f7 HAL to yours like H7 or F4 for exemple
 
 #### To add in makefile:
