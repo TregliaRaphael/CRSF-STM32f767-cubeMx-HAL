@@ -61,7 +61,7 @@ To use it, you must add` __weak` in front of Systick_Handler declared by cube mx
     if (now - last > 10000){              //printing data every 10MS but you can reduce it to make it less spammable
         printf("[%d] Chan[0]: %d, Chan[1]: %d, Chan[2]: %d, Chan[3]: %d\r\n", cpt++, crsfReadRawRC(0), crsfReadRawRC(1),crsfReadRawRC(2),crsfReadRawRC(3));
         //printf("Rssi: %d\r\n", getRssi());
-        //printf("cb: %d, callback: %d, crc: %d, switch: %d, Chan: %d, LQ: %d\r\n",cbcpt, crsfDebugs.nbrCallback, crsfDebugs.nbrCrc, crsfDebugs.nbrSwitch, crsfDebugs.nbrChanFrameRec, crsfDebugs.nbrLQFrameRec);
+        //printf("callback: %d, crc: %d, switch: %d, Chan: %d, LQ: %d\r\n", crsfDebugs.nbrCallback, crsfDebugs.nbrCrc, crsfDebugs.nbrSwitch, crsfDebugs.nbrChanFrameRec, crsfDebugs.nbrLQFrameRec);
         last = microsISR();
     }
     /* USER CODE END WHILE */
@@ -75,8 +75,6 @@ To use it, you must add` __weak` in front of Systick_Handler declared by cube mx
 ```
   void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   {
-      cbcpt++;
-
       if (huart->Instance == USART6){
           crsfRxCallback(data);
           HAL_UART_Receive_DMA(&huart6, &data, 1);
