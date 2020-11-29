@@ -290,7 +290,7 @@ void crsfRxCallback(uint8_t c)
                             lastRcFrameTimeUs = currentTimeUs;
                             crsfFrameDone = true;
                             memcpy(&crsfChannelDataFrame, &crsfFrame, sizeof(crsfFrame));
-                            crsfFrameStatus(); //maybe add checks on it later
+                            crsfFrameStatus(); // need to be called but maybe not here like bf
                             crsfDebugs.nbrChanFrameRec++;
                         }
                         break;
@@ -298,18 +298,19 @@ void crsfRxCallback(uint8_t c)
 #if defined(USE_CRSF_LINK_STATISTICS)
 
                     case CRSF_FRAMETYPE_LINK_STATISTICS: {
-                         // if to FC and 10 bytes + CRSF_FRAME_ORIGIN_DEST_SIZE
-                         if ((rssiSource == RSSI_SOURCE_RX_PROTOCOL_CRSF) &&
-                             (crsfFrame.frame.deviceAddress == CRSF_ADDRESS_FLIGHT_CONTROLLER) &&
-                             (crsfFrame.frame.frameLength == CRSF_FRAME_ORIGIN_DEST_SIZE + CRSF_FRAME_LINK_STATISTICS_PAYLOAD_SIZE)) {
-                             const crsfLinkStatistics_t* statsFrame = (const crsfLinkStatistics_t*)&crsfFrame.frame.payload;
-                             handleCrsfLinkStatisticsFrame(statsFrame, currentTimeUs);
-                         }
-                        break;
                         crsfDebugs.nbrLQFrameRec++;
+                        // if to FC and 10 bytes + CRSF_FRAME_ORIGIN_DEST_SIZE
+                        if ((rssiSource == RSSI_SOURCE_RX_PROTOCOL_CRSF) &&
+                            (crsfFrame.frame.deviceAddress == CRSF_ADDRESS_FLIGHT_CONTROLLER) &&
+                            (crsfFrame.frame.frameLength == CRSF_FRAME_ORIGIN_DEST_SIZE + CRSF_FRAME_LINK_STATISTICS_PAYLOAD_SIZE)) {
+                            const crsfLinkStatistics_t* statsFrame = (const crsfLinkStatistics_t*)&crsfFrame.frame.payload;
+                            handleCrsfLinkStatisticsFrame(statsFrame, currentTimeUs);
+                        }
+                        break;
                     }
 #endif
                     default:
+                        crsfDebugs.nbrLQFrameRec++;
                         break;
                 }
             }
@@ -347,13 +348,13 @@ bool crsfRxInit(UART_HandleTypeDef *huart)
     for (int ii = 0; ii < CRSF_MAX_CHANNEL; ++ii) {
         crsfChannelData[ii] = (16 * /*rxConfig()->midrc*/992) / 10 - 1408;
     }
-        if (rssiSource == RSSI_SOURCE_NONE) {
-            rssiSource = RSSI_SOURCE_RX_PROTOCOL_CRSF;
-        }
+    if (rssiSource == RSSI_SOURCE_NONE) {
+        rssiSource = RSSI_SOURCE_RX_PROTOCOL_CRSF;
+    }
 #ifdef USE_RX_LINK_QUALITY_INFO
-        if (linkQualitySource == LQ_SOURCE_NONE) {
-            linkQualitySource = LQ_SOURCE_RX_PROTOCOL_CRSF;
-        }
+    if (linkQualitySource == LQ_SOURCE_NONE) {
+        linkQualitySource = LQ_SOURCE_RX_PROTOCOL_CRSF;
+    }
 #endif
    
     serialPort = huart;
